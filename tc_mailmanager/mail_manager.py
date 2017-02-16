@@ -29,7 +29,7 @@ class SendGridV3Provider(object):
             attachment = Attachment()
             attachment.set_content(attachment_attrs['content'])
             attachment.set_filename(attachment_attrs['filename'])
-            attachment.set_type(attachment_attrs.get('content-type'))
+            attachment.set_type(attachment_attrs.get('type'))
             attachment.set_disposition(attachment_attrs.get('disposition'))
             mail.add_attachment(attachment)
         return mail.get()  # type(mail.get()) -> dict
