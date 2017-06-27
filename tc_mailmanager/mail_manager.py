@@ -1,14 +1,17 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
+import base64
 import logging
 
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, Personalization, Content, Attachment
 
+from envelopes import Envelope
+
 
 class SendGridV3Provider(object):
-    """ Sendgrid (v3) specific code is here. """
+    """Sendgrid (v3) specific code is here."""
 
     def __init__(self, api_key):
         self.sg = SendGridAPIClient(apikey=api_key)
@@ -43,16 +46,87 @@ class SendGridV3Provider(object):
         return response  # type(response) -> python_http_client.client.Response
 
     def is_successful_response(self, response):
-        """ Allows to know if a message has been sucessfully sent """
+        """Allows to know if a message has been sucessfully sent"""
         return (response is not False) and (200 <= response.status_code <= 299)
 
 
-class MailManager(object):
-    """ Provider-agnostic code here. """
+class SMTPProvider(object):
+    """SMTP-Provider specific code is here (this implementation uses Envelopes)"""
 
-    def __init__(self, credentials=None):
+    def __init__(self, smtp_credentials):
+        # Mandatory fields:
+        self.smtp_host = smtp_credentials['host']
+        self.smtp_port = smtp_credentials['port']
+        self.smtp_login = smtp_credentials['login']
+        self.smtp_password = smtp_credentials['password']
+
+        # Optional fields:
+        self.smtp_is_tls = smtp_credentials.get('tls', False)
+        self.smtp_is_smtps = smtp_credentials.get('smtps', False)
+
+        self.smtp_timeout = 30.0
         self.logger = logging.getLogger(__name__)
-        self.provider = SendGridV3Provider(credentials)
+
+    def create_message(self, email_attributes):
+        recipients = []
+        for recipient in email_attributes['Recipients']:
+            if 'Name' in recipient:
+                recipients.append((recipient['Email'], recipient['Name']))
+            else:
+                recipients.append(recipient['Email'])
+
+        message = Envelope(
+            from_addr=(email_attributes['FromEmail'], email_attributes['FromName']),
+            to_addr=recipients,
+            subject=email_attributes['Subject'],
+            html_body=email_attributes['Html-part'],
+        )
+        if email_attributes['Attachments']:
+            attachment_attrs = email_attributes['Attachments']
+            # unlike sendgrid, envelopes does b64encode itself:
+            content = base64.b64decode(attachment_attrs['content'])
+            # attachment_attrs["disposition"] is not handled
+            message.add_attachment(
+                file_path=attachment_attrs['filename'],
+                data=content,
+                mimetype=attachment_attrs.get('type')
+            )
+        return message  # type(message) -> Envelope object
+
+    def send_message(self, message):
+        try:
+            conn, send_result = message.send(
+                host=self.smtp_host,
+                port=self.smtp_port,
+                login=self.smtp_login,
+                password=self.smtp_password,
+                tls=self.smtp_is_tls,
+                smtps=self.smtp_is_smtps,
+                timeout=self.smtp_timeout,
+            )
+        except:
+            self.logger.error("SMTPProvider send_message failed", exc_info=True)
+            return False
+        else:
+            return True  # not much details about the success
+
+    def is_successful_response(self, response):
+        """Allows to know if a message has been sucessfully sent"""
+        return response  # it's already a boolean
+
+
+class MailManager(object):
+    """Provider-agnostic code here."""
+
+    def __init__(self, credentials=None, provider='sendgrid'):
+        self.logger = logging.getLogger(__name__)
+
+        if provider == 'sendgrid':
+            self.provider = SendGridV3Provider(credentials)
+        elif provider == 'smtp':
+            self.provider = SMTPProvider(credentials)
+        else:
+            raise NotImplementedError("unknown provider: {}".format(provider))
 
     def send_email(self, email_attributes):
         email = self._setup_email_template(email_attributes)
@@ -79,7 +153,7 @@ class MailManager(object):
         return responses
 
     def _setup_email_template(self, email_attributes):
-        """ Setup some default values for email_attributes """
+        """Setup some default values for email_attributes"""
         if not email_attributes:
             raise InvalidEmailTemplateException('Missing values to setup email template')
         email = {
@@ -108,8 +182,8 @@ class MailManager(object):
 
 
 class InvalidEmailTemplateException(Exception):
-    """ Raised when an email template is invalid """
+    """Raised when an email template is invalid"""
 
 
 class SendEmailException(Exception):
-    """ Raised when an email failed to be sent """
+    """Raised when an email failed to be sent"""

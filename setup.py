@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
-VERSION = '1.0.1'
+VERSION = '1.1.0'
 
 here = path.abspath(path.dirname(__file__))
 
@@ -25,9 +25,15 @@ setup(
     classifiers=[
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
-        "Private :: Do not Upload"
+        "Private :: Do not Upload",
     ],
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    install_requires=['sendgrid>=3,<4'],
+    install_requires=[
+        'sendgrid>=3,<4',
+        'Envelopes==0.5',
+    ],
+    dependency_links=[
+        "git+https://github.com/vamega/envelopes.git@af865e4#egg=envelopes-0.5",
+    ],
     extras_require={'test': ['pytest', 'mock']},
 )
