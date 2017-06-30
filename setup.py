@@ -25,7 +25,6 @@ setup(
     classifiers=[
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
-        "Private :: Do not Upload",
     ],
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     install_requires=[
