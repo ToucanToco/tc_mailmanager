@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
+import os
 import base64
 import logging
 
@@ -118,15 +119,33 @@ class SMTPProvider(object):
 class MailManager(object):
     """Provider-agnostic code here."""
 
-    def __init__(self, credentials=None, provider='sendgrid'):
+    def __init__(self, credentials=None, credentials_from_env=False, provider='sendgrid'):
         self.logger = logging.getLogger(__name__)
-
         if provider == 'sendgrid':
-            self.provider = SendGridV3Provider(credentials)
+            self.provider = self.build_sendgrid_provider(credentials, credentials_from_env)
         elif provider == 'smtp':
-            self.provider = SMTPProvider(credentials)
+            self.provider = self.build_smtp_provider(credentials, credentials_from_env)
         else:
             raise NotImplementedError("unknown provider: {}".format(provider))
+
+    @staticmethod
+    def build_sendgrid_provider(credentials, credentials_from_env):
+        if credentials_from_env:
+            credentials = os.environ['SENDGRID_API_KEY']
+        return SendGridV3Provider(credentials)
+
+    @staticmethod
+    def build_smtp_provider(credentials, credentials_from_env):
+        if credentials_from_env:
+            credentials = {
+                'host': os.environ['SMTP_HOST'],
+                'port': int(os.environ['SMTP_PORT']),
+                'login': os.environ['SMTP_LOGIN'],
+                'password': os.environ['SMTP_PASSWORD'],
+                'tls': os.environ.get('SMTP_TLS', '').lower() == 'true',
+                'smtps': os.environ.get('SMTP_SMTPS', '').lower() == 'true',
+            }
+        return SMTPProvider(credentials)
 
     def send_email(self, email_attributes):
         email = self._setup_email_template(email_attributes)
