@@ -1,0 +1,13 @@
+machine:
+    post:
+        - pyenv global 3.6.2
+    python:
+        version: 3.6.2
+
+dependencies:
+    override:
+        - make clean build testing_install
+
+test:
+    override:
+        - make test
