@@ -18,6 +18,18 @@ class SendGridV3Provider(object):
         self.sg = SendGridAPIClient(apikey=api_key)
         self.logger = logging.getLogger(__name__)
 
+    @staticmethod
+    def add_attachments(mail, attachments):
+        attachments = [attachments] if isinstance(attachments, dict) else attachments
+        for att_dict in attachments:
+            attachment = Attachment()
+            attachment.set_content(att_dict['content'])
+            attachment.set_filename(att_dict['filename'])
+            attachment.set_type(att_dict.get('type'))
+            attachment.set_disposition(att_dict.get('disposition'))
+            mail.add_attachment(attachment)
+        return mail
+
     def create_message(self, email_attributes):
         mail = Mail()
         mail.set_from(Email(email_attributes['FromEmail'], email_attributes['FromName']))
@@ -29,19 +41,13 @@ class SendGridV3Provider(object):
         # mail.add_content(Content("text/plain", "some text here"))
         mail.add_content(Content("text/html", email_attributes['Html-part']))
         if email_attributes['Attachments']:
-            attachment_attrs = email_attributes['Attachments']
-            attachment = Attachment()
-            attachment.set_content(attachment_attrs['content'])
-            attachment.set_filename(attachment_attrs['filename'])
-            attachment.set_type(attachment_attrs.get('type'))
-            attachment.set_disposition(attachment_attrs.get('disposition'))
-            mail.add_attachment(attachment)
+            mail = self.add_attachments(mail, email_attributes['Attachments'])
         return mail.get()  # type(mail.get()) -> dict
 
     def send_message(self, message):
         try:
             response = self.sg.client.mail.send.post(request_body=message)
-        except:
+        except Exception:
             self.logger.error("SendGridV3Provider send_message failed", exc_info=True)
             return False
         return response  # type(response) -> python_http_client.client.Response
@@ -68,6 +74,20 @@ class SMTPProvider(object):
         self.smtp_timeout = 30.0
         self.logger = logging.getLogger(__name__)
 
+    @staticmethod
+    def add_attachments(message, attachments):
+        attachments = [attachments] if isinstance(attachments, dict) else attachments
+        for att_dict in attachments:
+            # unlike sendgrid, envelopes does b64encode itself:
+            content = base64.b64decode(att_dict['content'])
+            # att_dict["disposition"] is not handled
+            message.add_attachment(
+                file_path=att_dict['filename'],
+                data=content,
+                mimetype=att_dict.get('type')
+            )
+        return message
+
     def create_message(self, email_attributes):
         recipients = []
         for recipient in email_attributes['Recipients']:
@@ -83,15 +103,7 @@ class SMTPProvider(object):
             html_body=email_attributes['Html-part'],
         )
         if email_attributes['Attachments']:
-            attachment_attrs = email_attributes['Attachments']
-            # unlike sendgrid, envelopes does b64encode itself:
-            content = base64.b64decode(attachment_attrs['content'])
-            # attachment_attrs["disposition"] is not handled
-            message.add_attachment(
-                file_path=attachment_attrs['filename'],
-                data=content,
-                mimetype=attachment_attrs.get('type')
-            )
+            message = self.add_attachments(message, email_attributes['Attachments'])
         return message  # type(message) -> Envelope object
 
     def send_message(self, message):
@@ -105,7 +117,7 @@ class SMTPProvider(object):
                 smtps=self.smtp_is_smtps,
                 timeout=self.smtp_timeout,
             )
-        except:
+        except Exception:
             self.logger.error("SMTPProvider send_message failed", exc_info=True)
             return False
         else:
