@@ -188,8 +188,8 @@ class MailManager(object):
         if not email_attributes:
             raise InvalidEmailTemplateException('Missing values to setup email template')
         email = {
-            'FromEmail': 'noreply@mail.toucantoco.com',
-            'FromName': 'Toucan Toco',
+            'FromEmail': os.environ.get('TOUCAN_FROM_EMAIL') or 'noreply@mail.toucantoco.com',
+            'FromName': os.environ.get('TOUCAN_FROM_NAME') or 'Toucan Toco',
             'Subject': '',
             'Html-part': '',
             'Attachments': {},
