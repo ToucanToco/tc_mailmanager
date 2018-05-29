@@ -45,6 +45,9 @@ class SendGridV3Provider(object):
         return mail.get()  # type(mail.get()) -> dict
 
     def send_message(self, message):
+        pers = message['personalizations'][0]['to']
+        dest = [d['email'] for d in pers]
+        self.logger.info(f"[sendgrid] sending email to {dest}")
         try:
             response = self.sg.client.mail.send.post(request_body=message)
         except Exception:
@@ -107,6 +110,8 @@ class SMTPProvider(object):
         return message  # type(message) -> Envelope object
 
     def send_message(self, message):
+        dest = [d[0] for d in message.to_addr]
+        self.logger.info(f"[smtp] sending email to {dest}")
         try:
             conn, send_result = message.send(
                 host=self.smtp_host,
@@ -160,16 +165,7 @@ class MailManager(object):
         return SMTPProvider(credentials)
 
     def send_email(self, email_attributes):
-        email = self._setup_email_template(email_attributes)
-        self._validate_email_template(email)
-
-        message = self.provider.create_message(email)
-        response = self.provider.send_message(message)
-        is_success = self.provider.is_successful_response(response)
-
-        if not is_success:
-            raise SendEmailException
-        return response
+        return self.send_emails([email_attributes])[0]
 
     def send_emails(self, emails_attributes):
         emails = [self._setup_email_template(email_attrs) for email_attrs in emails_attributes]
