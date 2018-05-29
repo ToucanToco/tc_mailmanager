@@ -47,7 +47,7 @@ class SendGridV3Provider(object):
     def send_message(self, message):
         pers = message['personalizations'][0]['to']
         dest = [d['email'] for d in pers]
-        self.logger.info(f"[sendgrid] sending email to {dest}")
+        self.logger.info("[sendgrid] sending email to {}".format(dest))
         try:
             response = self.sg.client.mail.send.post(request_body=message)
         except Exception:
@@ -111,7 +111,7 @@ class SMTPProvider(object):
 
     def send_message(self, message):
         dest = [d[0] for d in message.to_addr]
-        self.logger.info(f"[smtp] sending email to {dest}")
+        self.logger.info("[smtp] sending email to {}".format(dest))
         try:
             conn, send_result = message.send(
                 host=self.smtp_host,
