@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
-VERSION = '1.2.1'
+VERSION = '1.2.2'
 
 here = path.abspath(path.dirname(__file__))
 
@@ -28,8 +28,8 @@ setup(
     ],
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     install_requires=[
-        'sendgrid>=3,<6',
+        'sendgrid>=5,<6',
         'tctc_envelopes==0.5',
     ],
-    extras_require={'test': ['pytest', 'mock']},
+    extras_require={'test': ['pytest', 'pytest-mock', 'pytest-pep8', 'flake8']},
 )

@@ -23,17 +23,17 @@ class SendGridV3Provider(object):
         attachments = [attachments] if isinstance(attachments, dict) else attachments
         for att_dict in attachments:
             attachment = Attachment()
-            attachment.set_content(att_dict['content'])
-            attachment.set_filename(att_dict['filename'])
-            attachment.set_type(att_dict.get('type'))
-            attachment.set_disposition(att_dict.get('disposition'))
+            attachment.content = att_dict['content']
+            attachment.filename = att_dict['filename']
+            attachment.type = att_dict.get('type')
+            attachment.disposition = att_dict.get('disposition')
             mail.add_attachment(attachment)
         return mail
 
     def create_message(self, email_attributes):
         mail = Mail()
-        mail.set_from(Email(email_attributes['FromEmail'], email_attributes['FromName']))
-        mail.set_subject(email_attributes['Subject'])
+        mail.from_email = Email(email_attributes['FromEmail'], email_attributes['FromName'])
+        mail.subject = email_attributes['Subject']
         p = Personalization()
         for recipient in email_attributes['Recipients']:
             p.add_to(Email(recipient['Email'], recipient.get('Name')))
@@ -110,7 +110,7 @@ class SMTPProvider(object):
         return message  # type(message) -> Envelope object
 
     def send_message(self, message):
-        dest = [d[0] for d in message.to_addr]
+        dest = [(d[0] if isinstance(d, tuple) else d) for d in message.to_addr]
         self.logger.info("[smtp] sending email to {}".format(dest))
         try:
             conn, send_result = message.send(
@@ -201,11 +201,13 @@ class MailManager(object):
 
     def _validate_email_template_empty_value(self, field_name, field_content):
         if len(field_content) == 0 or field_content.isspace():
-            raise InvalidEmailTemplateException('The "{}" of email template is empty'.format(field_name))
+            raise InvalidEmailTemplateException(
+                'The "{}" of email template is empty'.format(field_name))
 
     def _validate_email_template_recipients(self, recipients):
         if len(recipients) == 0:
-            raise InvalidEmailTemplateException('The email template should have at least one recipient')
+            raise InvalidEmailTemplateException(
+                'The email template should have at least one recipient')
 
 
 class InvalidEmailTemplateException(Exception):
