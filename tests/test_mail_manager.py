@@ -42,6 +42,19 @@ def email_with_attachments():
             }
         ],
         'Recipients': [{'Email': 'test1@toucantoco.com', 'Name': 'Test'},
+                       {'Email': 'test2@toucantoco.com'}]
+    }
+
+
+@pytest.fixture
+def email_with_categories():
+    return {
+        'FromEmail': 'noreply@toucantoco.com',
+        'FromName': 'Toucan Toco',
+        'Subject': 'Toucan Toco - Take a look !',
+        'Html-part': '<h1>html part</h1>',
+        'Attachments': None,
+        'Recipients': [{'Email': 'test1@toucantoco.com', 'Name': 'Test'},
                        {'Email': 'test2@toucantoco.com'}],
         'categories': ['my_instance', 'my_small_app', 'lala.mynotif']
     }
@@ -55,8 +68,17 @@ def test_sendgrid_provider(email_with_attachments):
     pers = msg['personalizations'][0]['to']
     dest = [d['email'] for d in pers]
     assert dest == ['test1@toucantoco.com', 'test2@toucantoco.com']
-    assert msg['categories'] == ['my_instance', 'my_small_app', 'lala.mynotif']
 
+
+def test_sendgrid_provider_2(email_with_categories):
+    provider = SendGridV3Provider(api_key="foo")
+    msg = provider.create_message(email_with_categories)
+
+    assert isinstance(msg, dict)
+    pers = msg['personalizations'][0]['to']
+    dest = [d['email'] for d in pers]
+    assert dest == ['test1@toucantoco.com', 'test2@toucantoco.com']
+    assert msg['categories'] == ['my_instance', 'my_small_app', 'lala.mynotif']
 
 
 def test_smtp_provider(mail_manager, email_with_attachments):
