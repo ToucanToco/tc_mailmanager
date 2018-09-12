@@ -70,7 +70,7 @@ def test_sendgrid_provider(email_with_attachments):
     assert dest == ['test1@toucantoco.com', 'test2@toucantoco.com']
 
 
-def test_sendgrid_provider_2(email_with_categories):
+def test_sendgrid_provider_category(email_with_categories):
     provider = SendGridV3Provider(api_key="foo")
     msg = provider.create_message(email_with_categories)
 
