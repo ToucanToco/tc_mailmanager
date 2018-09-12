@@ -6,7 +6,9 @@ import base64
 import logging
 
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, Personalization, Content, Attachment
+from sendgrid.helpers.mail import (
+    Mail, Email, Personalization, Content, Attachment, Category
+)
 
 from envelopes import Envelope
 
@@ -38,6 +40,8 @@ class SendGridV3Provider(object):
         for recipient in email_attributes['Recipients']:
             p.add_to(Email(recipient['Email'], recipient.get('Name')))
         mail.add_personalization(p)
+        for category in email_attributes.get('categories', []):
+            mail.add_category(Category(category))
         # mail.add_content(Content("text/plain", "some text here"))
         mail.add_content(Content("text/html", email_attributes['Html-part']))
         if email_attributes['Attachments']:
