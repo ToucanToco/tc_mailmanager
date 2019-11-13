@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from collections import namedtuple
+import os
 
 import pytest
 from envelopes import Envelope
@@ -118,3 +119,14 @@ def test_validate_email_template_empty_value(mail_manager):
     field_name, field_content = 'Subject', ' \n  '
     with pytest.raises(InvalidEmailTemplateException):
         mail_manager._validate_email_template_empty_value(field_name, field_content)
+
+
+def test_setup_email_template(mail_manager):
+    ret = mail_manager._setup_email_template({'FromEmail': 'a@b.com', 'FromName': 'a'})
+    assert ret['FromEmail'] == 'a@b.com'
+    assert ret['FromName'] == 'a'
+
+    os.environ['TOUCAN_FROM_OVERWRITE'] = 'enable'
+    ret = mail_manager._setup_email_template({'FromEmail': 'a@b.com', 'FromName': 'a'})
+    assert ret['FromEmail'] == 'noreply@mail.toucantoco.com'
+    assert ret['FromName'] == 'Toucan Toco'
