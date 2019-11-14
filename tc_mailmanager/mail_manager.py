@@ -185,11 +185,19 @@ class MailManager(object):
 
     def _setup_email_template(self, email_attributes):
         """Setup some default values for email_attributes"""
+        from_email = os.environ.get('TOUCAN_FROM_EMAIL') or 'noreply@mail.toucantoco.com'
+        from_name = os.environ.get('TOUCAN_FROM_NAME') or 'Toucan Toco'
+
         if not email_attributes:
             raise InvalidEmailTemplateException('Missing values to setup email template')
+
+        if os.environ.get('TOUCAN_FROM_OVERWRITE') == 'enable':
+            email_attributes['FromEmail'] = from_email
+            email_attributes['FromName'] = from_name
+
         email = {
-            'FromEmail': os.environ.get('TOUCAN_FROM_EMAIL') or 'noreply@mail.toucantoco.com',
-            'FromName': os.environ.get('TOUCAN_FROM_NAME') or 'Toucan Toco',
+            'FromEmail': from_email,
+            'FromName': from_name,
             'Subject': '',
             'Html-part': '',
             'Attachments': {},
