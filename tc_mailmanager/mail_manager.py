@@ -67,7 +67,11 @@ class SendGridV3Provider(object):
 
     def get_emails(self, email_address, limit):
         try:
-            return self.sg.client.messages.get(query_params={'query': f'to_email="{email_address}"', 'limit': limit})
+            params = {
+                'query': f'to_email="{email_address}"',
+                'limit': limit,
+            }
+            return self.sg.client.messages.get(query_params=params)
         except Exception as e:
             self.logger.error("SendGridV3Provider get_emails failed", exc_info=True)
             raise e
