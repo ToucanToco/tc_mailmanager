@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 import os
 import base64
 import logging
+from urllib.parse import urlencode
+from urllib.request import pathname2url
 
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import (
@@ -62,6 +64,13 @@ class SendGridV3Provider(object):
     def is_successful_response(self, response):
         """Allows to know if a message has been sucessfully sent"""
         return (response is not False) and (200 <= response.status_code <= 299)
+
+    def get_emails(self, email_address, limit):
+        try:
+            return self.sg.client.messages.get(query_params={'query': f'to_email="{email_address}"', 'limit': limit})
+        except Exception as e:
+            self.logger.error("SendGridV3Provider get_emails failed", exc_info=True)
+            raise e
 
 
 class SMTPProvider(object):
@@ -136,6 +145,9 @@ class SMTPProvider(object):
         """Allows to know if a message has been sucessfully sent"""
         return response  # it's already a boolean
 
+    def get_emails(self, email_address, limit):
+        raise NotImplementedError('SMTPProvider cannot get_emails')
+
 
 class MailManager(object):
     """Provider-agnostic code here."""
@@ -182,6 +194,9 @@ class MailManager(object):
         if not total_success:
             raise SendEmailException
         return responses
+
+    def get_emails(self, username, limit=10):
+        return self.provider.get_emails(username, limit)
 
     def _setup_email_template(self, email_attributes):
         """Setup some default values for email_attributes"""
