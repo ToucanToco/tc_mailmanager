@@ -4,8 +4,6 @@ from __future__ import unicode_literals
 import os
 import base64
 import logging
-from urllib.parse import urlencode
-from urllib.request import pathname2url
 
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import (
