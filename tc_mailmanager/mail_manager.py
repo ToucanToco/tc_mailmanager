@@ -63,6 +63,17 @@ class SendGridV3Provider(object):
         """Allows to know if a message has been sucessfully sent"""
         return (response is not False) and (200 <= response.status_code <= 299)
 
+    def get_emails(self, email_address, limit):
+        try:
+            params = {
+                'query': f'to_email="{email_address}"',
+                'limit': limit,
+            }
+            return self.sg.client.messages.get(query_params=params)
+        except Exception as e:
+            self.logger.error("SendGridV3Provider get_emails failed", exc_info=True)
+            raise e
+
 
 class SMTPProvider(object):
     """SMTP-Provider specific code is here (this implementation uses Envelopes)"""
@@ -136,6 +147,9 @@ class SMTPProvider(object):
         """Allows to know if a message has been sucessfully sent"""
         return response  # it's already a boolean
 
+    def get_emails(self, email_address, limit):
+        raise NotImplementedError('SMTPProvider cannot get_emails')
+
 
 class MailManager(object):
     """Provider-agnostic code here."""
@@ -182,6 +196,9 @@ class MailManager(object):
         if not total_success:
             raise SendEmailException
         return responses
+
+    def get_emails(self, username, limit=10):
+        return self.provider.get_emails(username, limit)
 
     def _setup_email_template(self, email_attributes):
         """Setup some default values for email_attributes"""

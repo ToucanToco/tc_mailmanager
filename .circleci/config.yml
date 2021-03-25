@@ -8,6 +8,10 @@ dependencies:
     override:
         - make clean testing_install
 
-test:
-    override:
-        - make test
+jobs:
+    build:
+        docker:
+            - image: circleci/python:3.6.4
+        steps:
+            - run: make test
+
