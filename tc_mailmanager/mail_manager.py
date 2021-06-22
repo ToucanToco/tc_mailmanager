@@ -69,7 +69,11 @@ class SendGridV3Provider(object):
                 'query': f'to_email="{email_address}"',
                 'limit': limit,
             }
-            return self.sg.client.messages.get(query_params=params)
+            res = self.sg.client.messages.get(query_params=params)
+            emails = res.to_dict
+            if res.status_code != 200:
+                raise GetEmailException(res.body)
+            return emails
         except Exception as e:
             self.logger.error("SendGridV3Provider get_emails failed", exc_info=True)
             raise e
@@ -245,3 +249,7 @@ class InvalidEmailTemplateException(Exception):
 
 class SendEmailException(Exception):
     """Raised when an email failed to be sent"""
+
+
+class GetEmailException(Exception):
+    """Raised when failing to retrieve emails"""
