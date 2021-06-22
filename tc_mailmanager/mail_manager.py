@@ -51,7 +51,7 @@ class SendGridV3Provider(object):
     def send_message(self, message):
         pers = message['personalizations'][0]['to']
         dest = [d['email'] for d in pers]
-        self.logger.info("[sendgrid] sending email to {}".format(dest))
+        self.logger.info("[sendgrid] sending email to {}, with categories {}".format(dest, message.get('categories', [])))
         try:
             response = self.sg.client.mail.send.post(request_body=message)
         except Exception:
