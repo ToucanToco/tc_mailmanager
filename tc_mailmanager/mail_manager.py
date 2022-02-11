@@ -22,7 +22,7 @@ class SendGridV3Provider:
     """Sendgrid (v3) specific code is here."""
 
     def __init__(self, api_key: str) -> None:
-        self.sg = SendGridAPIClient(apikey=api_key)
+        self.sg = SendGridAPIClient(api_key=api_key)
         self.logger = logging.getLogger(__name__)
 
     @staticmethod

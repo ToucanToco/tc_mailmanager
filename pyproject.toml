@@ -20,7 +20,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-sendgrid = ">=5,<6"
+sendgrid = "^6.9.6"
 tctc-envelopes = "0.5"
 
 [tool.poetry.dev-dependencies]
