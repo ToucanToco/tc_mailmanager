@@ -1,5 +1,7 @@
-from .mail_manager import (
-    MailManager,
-    InvalidEmailTemplateException,
-    SendEmailException,
+from .mail_manager import InvalidEmailTemplateException, MailManager, SendEmailException
+
+__all__ = (
+    "MailManager",
+    "InvalidEmailTemplateException",
+    "SendEmailException",
 )
