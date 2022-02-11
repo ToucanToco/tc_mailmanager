@@ -1,21 +1,43 @@
-clean:
-	find . -name \*.pyc -delete
-	find . -name \*.so -delete
-	find . -name __pycache__ -delete
-	rm -rf .coverage build dist *.egg-info .pytest_cache
+.DEFAULT_GOAL := all
+black = poetry run black tc_mailmanager tests
+isort = poetry run isort tc_mailmanager tests
 
-build:
-	python setup.py sdist bdist_wheel
-
-upload:
-	twine upload dist/*
-
+.PHONY: install
 install:
-	pip install .
+	poetry install
+	poetry run pre-commit install
 
-testing_install:
-	pip install '.[test]'
+.PHONY: format
+format:
+	poetry run pre-commit run --all-files
 
+.PHONY: lint
+lint:
+	poetry run flake8 tc_mailmanager tests
+	$(black) --diff --check
+	$(isort) --check-only
+
+.PHONY: mypy
+mypy:
+	poetry run mypy .
+
+.PHONY: test
 test:
-	flake8 tc_mailmanager tests
-	PYTHONPATH=. pytest tests
+	poetry run pytest --cov=tc_mailmanager --cov-report xml --cov-report term-missing
+
+.PHONY: all
+all: lint mypy test
+
+.PHONY: clean
+clean:
+	rm -rf `find . -name __pycache__`
+	rm -f `find . -type f -name '*.py[co]' `
+	rm -rf .coverage coverage.xml build dist *.egg-info .pytest_cache .mypy_cache
+
+.PHONY: build
+build:
+	poetry build
+
+.PHONY: upload
+upload:
+	poetry publish
