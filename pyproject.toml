@@ -24,7 +24,7 @@ sendgrid = "^6.9.6"
 tctc-envelopes = "0.5"
 
 [tool.poetry.dev-dependencies]
-black = "^22.1.0"
+black = "^22.8.0"
 flake8 = "^4.0.1"
 isort = "^5.10.1"
 mypy = "^0.931"
