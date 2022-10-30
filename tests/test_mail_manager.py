@@ -83,7 +83,7 @@ def test_sendgrid_provider_category(email_with_categories):
     pers = msg["personalizations"][0]["to"]
     dest = [d["email"] for d in pers]
     assert dest == ["test1@toucantoco.com", "test2@toucantoco.com"]
-    assert msg["categories"] == ["lala.mynotif", "my_small_app", "my_instance"]
+    assert msg["categories"] == ["my_instance", "my_small_app", "lala.mynotif"]
 
 
 def test_smtp_provider(mail_manager, email_with_attachments):
