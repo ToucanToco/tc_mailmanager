@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tc_mailmanager"
-version = "1.7.0"
+version = "1.7.1"
 description = "ToucanToco's cross-python-projects MailManager"
 authors = ["Toucan Toco <dev@toucantoco.com>"]
 readme = "README.md"
